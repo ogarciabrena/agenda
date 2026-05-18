@@ -1,1 +1,842 @@
-a
+|<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Panel de Citas</title>
+<link rel="manifest" href="./manifest.json"/>
+<meta name="theme-color" content="#c8f060"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Citas"/>
+<link rel="apple-touch-icon" href="./icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0f0f0f;
+  --surface:  #181818;
+  --s2:       #222;
+  --s3:       #2a2a2a;
+  --border:   #2e2e2e;
+  --b2:       #3a3a3a;
+  --text:     #e8e8e4;
+  --t2:       #888884;
+  --t3:       #555552;
+  --accent:   #c8f060;
+  --a2:       #a8d040;
+  --green:    #1a2a0a;
+  --gb:       #4a7a10;
+  --gt:       #a8e840;
+  --red:      #2a1a1a;
+  --rb:       #7a3010;
+  --rt:       #e87040;
+  --gray:     #1a1a1a;
+  --grb:      #383838;
+  --grt:      #666660;
+  --r:        8px;
+  --rl:       14px;
+  --font:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; padding-top: calc(12px + var(--safe-top));
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  gap: 8px;
+}
+.logo { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .08em; white-space: nowrap; }
+.logo span { color: var(--t2); }
+.header-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.h-negocio { font-size: 12px; color: var(--t2); display: none; }
+@media (min-width: 400px) { .h-negocio { display: block; } }
+.btn-sm {
+  background: none; border: 1px solid var(--b2); color: var(--t2);
+  padding: 5px 10px; border-radius: var(--r); cursor: pointer;
+  font-family: var(--font); font-size: 12px; white-space: nowrap;
+  transition: all .15s;
+}
+.btn-sm:hover, .btn-sm:active { border-color: var(--accent); color: var(--accent); }
+.btn-install { background: var(--green); border-color: var(--gb); color: var(--gt); display: none; }
+.btn-install.visible { display: block; }
+
+/* ── BODY LAYOUT ── */
+/* Mobile: columna única — lista arriba, detalle abajo (o viceversa con drawer)  */
+/* Desktop ≥768: dos columnas */
+.app-body {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding-top: calc(48px + var(--safe-top));
+  padding-bottom: var(--safe-bot);
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── PANEL IZQUIERDO (lista) ── */
+.panel-lista {
+  width: 100%;
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+  transition: transform .3s ease;
+}
+@media (min-width: 768px) {
+  .panel-lista { width: 280px; min-width: 280px; border-right: 1px solid var(--border); }
+}
+
+/* Cuando hay slot activo en móvil, ocultar lista y mostrar detalle */
+.app-body.detalle-activo .panel-lista {
+  display: none;
+}
+@media (min-width: 768px) {
+  .app-body.detalle-activo .panel-lista { display: flex; }
+}
+
+/* ── SEMANA NAV ── */
+.semana-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.semana-label { font-family: var(--mono); font-size: 11px; color: var(--t2); letter-spacing: .06em; }
+.nav-btn {
+  background: none; border: 1px solid var(--b2); color: var(--t2);
+  width: 30px; height: 30px; border-radius: 6px; cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── STATS ── */
+.stats { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.stat { flex: 1; padding: 10px 8px; text-align: center; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: none; }
+.stat-n { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--accent); }
+.stat-n.red { color: var(--rt); }
+.stat-n.gray { color: var(--grt); }
+.stat-l { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+/* ── LISTA SLOTS ── */
+.slots-scroll { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+.dia-header {
+  padding: 8px 14px 5px; font-family: var(--mono); font-size: 10px; color: var(--t3);
+  letter-spacing: .08em; text-transform: uppercase;
+  position: sticky; top: 0; background: var(--surface); z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+.dia-header.hoy { color: var(--accent); }
+.slot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+  gap: 8px; transition: background .1s; min-height: 52px;
+}
+.slot:active { background: var(--s2); }
+@media (min-width: 768px) {
+  .slot:hover { background: var(--s2); }
+  .slot.activo { background: var(--s2); border-left: 3px solid var(--accent); }
+}
+.slot-hora { font-family: var(--mono); font-size: 12px; color: var(--t2); min-width: 56px; flex-shrink: 0; }
+.slot-nombre { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill {
+  font-size: 10px; font-family: var(--mono); padding: 3px 8px; border-radius: 20px;
+  border: 1px solid; white-space: nowrap; text-transform: uppercase;
+  letter-spacing: .04em; flex-shrink: 0;
+}
+.pill.libre    { background: var(--green); border-color: var(--gb); color: var(--gt); }
+.pill.ocupado  { background: var(--red);   border-color: var(--rb); color: var(--rt); }
+.pill.bloqueado{ background: var(--gray);  border-color: var(--grb);color: var(--grt);}
+
+/* ── PANEL DETALLE ── */
+.panel-detalle {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+.app-body.detalle-activo .panel-detalle { display: flex; }
+@media (min-width: 768px) {
+  .panel-detalle { display: flex; flex: 1; }
+}
+
+/* Barra de navegación de regreso (solo móvil) */
+.detalle-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+@media (min-width: 768px) { .detalle-topbar { display: none; } }
+.btn-back {
+  background: none; border: 1px solid var(--b2); color: var(--t2);
+  padding: 5px 12px; border-radius: var(--r); cursor: pointer;
+  font-family: var(--font); font-size: 12px; display: flex; align-items: center; gap: 4px;
+}
+.detalle-topbar-info { font-size: 13px; color: var(--text); font-weight: 500; }
+.detalle-topbar-sub  { font-size: 11px; color: var(--t3); margin-left: auto; font-family: var(--mono); }
+
+.detalle-scroll {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 32px;
+}
+@media (min-width: 768px) { .detalle-scroll { padding: 28px 24px 40px; } }
+.detalle-inner { max-width: 520px; margin: 0 auto; }
+
+/* Slot header en detalle */
+.slot-card {
+  background: var(--s2); border: 1px solid var(--b2);
+  border-radius: var(--rl); padding: 16px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.slot-card-fecha { text-align: center; flex-shrink: 0; }
+.slot-card-dia  { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--accent); line-height: 1; }
+.slot-card-mes  { font-size: 10px; color: var(--t3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.slot-card-div  { width: 1px; height: 44px; background: var(--border); flex-shrink: 0; }
+.slot-card-info { flex: 1; min-width: 0; }
+.slot-card-hora { font-family: var(--mono); font-size: 20px; color: var(--text); }
+.slot-card-sub  { font-size: 12px; color: var(--t3); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+
+/* Seccion titulo */
+.sec-title {
+  font-family: var(--mono); font-size: 10px; color: var(--t3);
+  letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Datos cita existente */
+.cita-card {
+  background: var(--s2); border: 1px solid var(--rb);
+  border-radius: var(--rl); padding: 16px; margin-bottom: 16px;
+}
+.cita-nombre { font-size: 17px; font-weight: 500; margin-bottom: 10px; }
+.cita-row { display: flex; gap: 8px; font-size: 13px; color: var(--t2); margin-bottom: 5px; align-items: flex-start; }
+.cita-row span { color: var(--t3); flex-shrink: 0; min-width: 68px; }
+
+/* Botones WA */
+.wa-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.btn-wa {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 16px; border-radius: var(--r); border: 1px solid;
+  cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 500;
+  text-decoration: none; transition: opacity .15s; min-height: 48px;
+}
+.btn-wa:active { opacity: .75; }
+.btn-wa-confirmar  { background: #0d2b0d; border-color: #2a6a2a; color: #6be86b; }
+.btn-wa-recordar   { background: #0d1f2b; border-color: #1a5070; color: #60b0e0; }
+.btn-wa-yo         { background: #1a1a2b; border-color: #3a3a7a; color: #9090e0; }
+.btn-cancelar {
+  width: 100%; padding: 12px; border-radius: var(--r);
+  background: none; border: 1px solid var(--rb); color: var(--rt);
+  cursor: pointer; font-family: var(--font); font-size: 13px;
+  transition: background .15s; min-height: 44px;
+}
+.btn-cancelar:active { background: var(--red); }
+
+/* Formulario nueva cita */
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.form-group label { font-size: 10px; color: var(--t3); letter-spacing: .06em; text-transform: uppercase; font-family: var(--mono); }
+.form-group input,
+.form-group textarea {
+  background: var(--s2); border: 1px solid var(--b2); color: var(--text);
+  padding: 12px 13px; border-radius: var(--r); font-family: var(--font); font-size: 14px;
+  transition: border-color .15s; outline: none; width: 100%;
+  -webkit-appearance: none;
+}
+.form-group input:focus,
+.form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 72px; }
+
+/* Grid servicios */
+.servicios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (min-width: 480px) { .servicios-grid { grid-template-columns: repeat(3, 1fr); } }
+.chip {
+  padding: 11px 8px; border-radius: var(--r); border: 1px solid var(--b2);
+  background: none; color: var(--t2); cursor: pointer; font-family: var(--font);
+  font-size: 12px; text-align: center; transition: all .15s; min-height: 44px;
+  line-height: 1.2;
+}
+.chip:active, .chip.sel { background: var(--green); border-color: var(--gb); color: var(--gt); }
+
+/* Botón guardar */
+.btn-primary {
+  width: 100%; background: var(--accent); color: #0f0f0f;
+  border: none; padding: 15px; border-radius: var(--r);
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: background .15s; margin-top: 4px;
+  min-height: 52px;
+}
+.btn-primary:active { background: var(--a2); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; background: var(--s3); color: var(--t2);
+  border: 1px solid var(--b2); padding: 13px; border-radius: var(--r);
+  font-family: var(--font); font-size: 13px; cursor: pointer;
+  transition: all .15s; margin-top: 8px; min-height: 48px;
+}
+.btn-secondary:active { border-color: var(--grb); }
+
+/* Panel confirmacion */
+.confirm-card {
+  background: var(--s2); border: 1px solid var(--gb);
+  border-radius: var(--rl); padding: 16px; margin-bottom: 16px;
+}
+.confirm-titulo { font-size: 15px; font-weight: 500; color: var(--gt); margin-bottom: 10px; }
+.confirm-row { font-size: 13px; color: var(--t2); margin-bottom: 4px; display: flex; gap: 8px; }
+.confirm-row span { color: var(--t3); min-width: 64px; flex-shrink: 0; }
+
+/* Seccion bloqueo */
+.bloqueo-sep { margin: 24px 0 0; border-top: 1px solid var(--border); padding-top: 20px; }
+
+/* Empty state */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--t3); text-align: center; padding: 40px 24px; }
+.empty-icon { font-size: 36px; margin-bottom: 14px; opacity: .4; }
+.empty p { font-size: 13px; line-height: 1.7; }
+.empty-hint { margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--t3); }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: calc(20px + var(--safe-bot)); left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--s2); border: 1px solid var(--b2); border-radius: var(--rl);
+  padding: 13px 20px; font-size: 13px; color: var(--text); opacity: 0;
+  transition: all .3s; z-index: 999; white-space: nowrap;
+  pointer-events: none; max-width: 90vw;
+}
+#toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.ok  { border-color: var(--gb); }
+#toast.err { border-color: var(--rb); }
+
+/* Loading spinner */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--b2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-center { padding: 40px; text-align: center; color: var(--t3); font-size: 13px; }
+
+/* Modal config */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85);
+  z-index: 300; align-items: flex-end; justify-content: center;
+  padding-bottom: var(--safe-bot);
+}
+@media (min-width: 480px) { .modal-overlay { align-items: center; } }
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--b2);
+  border-radius: var(--rl) var(--rl) 0 0; padding: 24px 20px 32px;
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+}
+@media (min-width: 480px) { .modal { border-radius: var(--rl); } }
+.modal h3 { font-size: 14px; margin-bottom: 18px; color: var(--accent); font-family: var(--mono); letter-spacing: .06em; }
+.modal .form-group { margin-bottom: 14px; }
+.modal .form-group input,
+.modal .form-group textarea {
+  background: var(--s2); border: 1px solid var(--b2); color: var(--text);
+  padding: 12px 13px; border-radius: var(--r); font-family: var(--font); font-size: 14px;
+  outline: none; width: 100%;
+}
+.modal .form-group input:focus { border-color: var(--accent); }
+.modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+.btn-modal-ok     { flex: 1; background: var(--accent); color: #0f0f0f; border: none; padding: 13px; border-radius: var(--r); cursor: pointer; font-family: var(--font); font-weight: 600; font-size: 14px; }
+.btn-modal-cancel { flex: 1; background: none; border: 1px solid var(--b2); color: var(--t2); padding: 13px; border-radius: var(--r); cursor: pointer; font-family: var(--font); font-size: 14px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">agenda <span>/</span> panel</div>
+  <div class="header-right">
+    <span class="h-negocio" id="h-negocio"></span>
+    <button class="btn-sm btn-install" id="btn-install">Instalar app</button>
+    <button class="btn-sm" onclick="abrirConfig()">Config</button>
+  </div>
+</header>
+
+<div class="app-body" id="app-body">
+
+  <!-- LISTA -->
+  <div class="panel-lista" id="panel-lista">
+    <div class="semana-nav">
+      <button class="nav-btn" onclick="cambiarSemana(-1)">&#8249;</button>
+      <div class="semana-label" id="semana-label">Cargando...</div>
+      <button class="nav-btn" onclick="cambiarSemana(1)">&#8250;</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="stat-l">—</div><div class="stat-l">Libres</div></div>
+      <div class="stat"><div class="stat-n red" id="stat-c">—</div><div class="stat-l">Citas</div></div>
+      <div class="stat"><div class="stat-n gray" id="stat-b">—</div><div class="stat-l">Bloq.</div></div>
+    </div>
+    <div class="slots-scroll" id="slots-scroll">
+      <div class="loading-center"><div class="spinner" style="margin:0 auto 10px"></div><br>Cargando...</div>
+    </div>
+  </div>
+
+  <!-- DETALLE -->
+  <div class="panel-detalle" id="panel-detalle">
+    <div class="detalle-topbar">
+      <button class="btn-back" onclick="volverLista()">&#8592; Lista</button>
+      <span class="detalle-topbar-info" id="topbar-titulo"></span>
+      <span class="detalle-topbar-sub" id="topbar-sub"></span>
+    </div>
+    <div class="detalle-scroll">
+      <div class="detalle-inner" id="detalle-inner">
+        <div class="empty">
+          <div class="empty-icon">&#128197;</div>
+          <p>Toca un horario<br>para ver detalles o agendar</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- Modal config -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal">
+    <h3>// configuracion</h3>
+    <div class="form-group">
+      <label>URL del Apps Script</label>
+      <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec"/>
+    </div>
+    <div class="form-group">
+      <label>Nombre del negocio</label>
+      <input type="text" id="cfg-negocio" placeholder="Mi Negocio"/>
+    </div>
+    <div class="form-group">
+      <label>Direccion</label>
+      <input type="text" id="cfg-dir" placeholder="Calle, colonia, ciudad"/>
+    </div>
+    <div class="form-group">
+      <label>Servicios (uno por linea)</label>
+      <textarea id="cfg-servicios" rows="5" placeholder="Consulta inicial&#10;Servicio 1&#10;Servicio 2&#10;Otro"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="cerrarConfig()">Cancelar</button>
+      <button class="btn-modal-ok" onclick="guardarConfig()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG PRECARGADA ── edita antes de subir a GitHub
+var CFG_DEFAULT = {
+  url:       'https://script.google.com/macros/s/AKfycbz3vK8cBqnsMItovuA2Rf2AXmIxY_2WfFf_weFkGYkTotQT-BRfTIxD4oWv2fwKL2BJvA/exec',
+  negocio:   'Mi Negocio',
+  direccion: 'Calle Ejemplo 123, Ciudad',
+  servicios: ['Consulta inicial','Servicio 1','Servicio 2','Servicio 3','Servicio 4','Otro'],
+};
+
+var CFG = Object.assign({}, CFG_DEFAULT);
+
+function cargarCFG() {
+  try {
+    var saved = localStorage.getItem('agenda_cfg');
+    if (saved) CFG = Object.assign({}, CFG_DEFAULT, JSON.parse(saved));
+  } catch(e) {}
+  document.getElementById('h-negocio').textContent = CFG.negocio;
+}
+
+function abrirConfig() {
+  document.getElementById('cfg-url').value       = CFG.url;
+  document.getElementById('cfg-negocio').value   = CFG.negocio;
+  document.getElementById('cfg-dir').value       = CFG.direccion || '';
+  document.getElementById('cfg-servicios').value = CFG.servicios.join('\n');
+  document.getElementById('modal-config').classList.add('open');
+}
+function cerrarConfig() {
+  document.getElementById('modal-config').classList.remove('open');
+}
+function guardarConfig() {
+  CFG.url       = document.getElementById('cfg-url').value.trim();
+  CFG.negocio   = document.getElementById('cfg-negocio').value.trim() || 'Mi Negocio';
+  CFG.direccion = document.getElementById('cfg-dir').value.trim();
+  CFG.servicios = document.getElementById('cfg-servicios').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  localStorage.setItem('agenda_cfg', JSON.stringify(CFG));
+  document.getElementById('h-negocio').textContent = CFG.negocio;
+  cerrarConfig();
+  cargarSlots();
+}
+
+// ── ESTADO ──
+var offsetSemana = 0;
+var slotsData    = [];
+var slotActivo   = null;
+var servicioSel  = '';
+
+// ── MOBILE: volver a lista ──
+function volverLista() {
+  slotActivo = null;
+  document.getElementById('app-body').classList.remove('detalle-activo');
+  renderSlots(); // quitar activo highlight
+}
+
+// ── API ──
+function api(params, cb) {
+  if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
+    toast('Configura la URL del Apps Script', 'err');
+    return;
+  }
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  fetch(CFG.url + '?' + qs)
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      try { cb(null, JSON.parse(t)); }
+      catch(e) { cb('JSON parse error: ' + t.substr(0,100)); }
+    })
+    .catch(function(e){ cb(e.message); });
+}
+
+// ── CARGAR SLOTS ──
+function cargarSlots() {
+  var el = document.getElementById('slots-scroll');
+  el.innerHTML = '<div class="loading-center"><div class="spinner" style="margin:0 auto 10px"></div><br>Cargando...</div>';
+  if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
+    el.innerHTML = '<div class="loading-center" style="color:var(--rt)">Configura la URL del Apps Script</div>';
+    return;
+  }
+  api({ accion: 'slots', semana: offsetSemana }, function(err, data) {
+    if (err || !data || !data.ok) {
+      el.innerHTML = '<div class="loading-center" style="color:var(--rt)">Error: ' + (err || (data && data.error) || 'desconocido') + '</div>';
+      return;
+    }
+    slotsData = data.slots || [];
+    renderSlots();
+  });
+}
+
+// ── RENDER LISTA ──
+function renderSlots() {
+  var libres = 0, citas = 0, bloqs = 0;
+  slotsData.forEach(function(s){
+    if (s.estado === 'libre') libres++;
+    else if (s.estado === 'ocupado') citas++;
+    else bloqs++;
+  });
+  document.getElementById('stat-l').textContent = libres;
+  document.getElementById('stat-c').textContent = citas;
+  document.getElementById('stat-b').textContent = bloqs;
+
+  // Semana label
+  if (slotsData.length > 0) {
+    var p = new Date(slotsData[0].inicio);
+    var u = new Date(slotsData[slotsData.length-1].inicio);
+    document.getElementById('semana-label').textContent =
+      p.getDate() + '/' + (p.getMonth()+1) + ' - ' + u.getDate() + '/' + (u.getMonth()+1);
+  }
+
+  // Agrupar por dia
+  var grupos = {};
+  var orden  = [];
+  slotsData.forEach(function(s){
+    if (!grupos[s.fechaTexto]) { grupos[s.fechaTexto] = []; orden.push(s.fechaTexto); }
+    grupos[s.fechaTexto].push(s);
+  });
+
+  var hoyStr = new Date().toDateString();
+  var html = '';
+  orden.forEach(function(dia){
+    var slots = grupos[dia];
+    var esHoy = new Date(slots[0].inicio).toDateString() === hoyStr;
+    html += '<div class="dia-header ' + (esHoy ? 'hoy' : '') + '">' + dia + (esHoy ? ' · HOY' : '') + '</div>';
+    slots.forEach(function(s){
+      var esActivo = slotActivo && slotActivo.id === s.id ? ' activo' : '';
+      var nombre = s.estado === 'libre' ? '' : (s.titulo || '—');
+      html += '<div class="slot' + esActivo + '" onclick="selSlot(\'' + s.id + '\')">' +
+        '<span class="slot-hora">' + s.horaTexto + '</span>' +
+        '<span class="slot-nombre">' + nombre + '</span>' +
+        '<span class="pill ' + s.estado + '">' + s.estado + '</span>' +
+      '</div>';
+    });
+  });
+  if (!html) html = '<div class="loading-center">Sin slots esta semana</div>';
+  document.getElementById('slots-scroll').innerHTML = html;
+}
+
+// ── SELECCIONAR SLOT ──
+function selSlot(id) {
+  slotActivo = slotsData.find(function(s){ return s.id === id; });
+  if (!slotActivo) return;
+  document.getElementById('app-body').classList.add('detalle-activo');
+
+  // Actualizar topbar mobile
+  var parts = (slotActivo.fechaTexto || '').split(' ');
+  document.getElementById('topbar-titulo').textContent = slotActivo.horaTexto + ' · ' + (parts[0] || '');
+  document.getElementById('topbar-sub').textContent    = (parts[1] || '') + ' ' + (parts[2] || '');
+
+  renderDetalle();
+  renderSlots();
+}
+
+// ── RENDER DETALLE ──
+function renderDetalle() {
+  if (!slotActivo) return;
+  var s = slotActivo;
+  var parts = (s.fechaTexto || '').split(' ');
+  var dia = parts[1] || '', mes = parts[2] || '', diaNom = parts[0] || '';
+
+  var html = '<div class="slot-card">' +
+    '<div class="slot-card-fecha">' +
+      '<div class="slot-card-dia">' + dia + '</div>' +
+      '<div class="slot-card-mes">' + mes + '</div>' +
+    '</div>' +
+    '<div class="slot-card-div"></div>' +
+    '<div class="slot-card-info">' +
+      '<div class="slot-card-hora">' + s.horaTexto + '</div>' +
+      '<div class="slot-card-sub">' + diaNom + ' &nbsp;<span class="pill ' + s.estado + '">' + s.estado + '</span></div>' +
+    '</div>' +
+  '</div>';
+
+  if (s.estado === 'ocupado')  html += renderCitaExistente(s);
+  else if (s.estado === 'bloqueado') html += renderBloqueado(s);
+  else html += renderFormNuevo(s);
+
+  document.getElementById('detalle-inner').innerHTML = html;
+  servicioSel = '';
+}
+
+// ── CITA EXISTENTE ──
+function renderCitaExistente(s) {
+  var tel      = (s.telefono || '').replace(/\D/g,'');
+  var nombre   = s.titulo ? s.titulo.split(' - ')[0] : '';
+  var servicio = s.servicioCliente || '';
+  var notas    = s.notasCliente    || '';
+  var email    = s.emailCliente    || '';
+
+  var msgConfirmar =
+    'Hola ' + nombre + '! Tu cita en *' + CFG.negocio + '* esta confirmada:\n\n' +
+    'Fecha: ' + s.fechaTexto + '\nHora: ' + s.horaTexto + '\n' +
+    (servicio ? 'Servicio: ' + servicio + '\n' : '') +
+    'Direccion: ' + (CFG.direccion || '') + '\n' +
+    (notas ? 'Notas: ' + notas + '\n' : '') + '\nTe esperamos!';
+
+  var msgRecordar =
+    'Hola ' + nombre + '! Te recordamos tu cita en *' + CFG.negocio + '*:\n\n' +
+    'Fecha: ' + s.fechaTexto + '\nHora: ' + s.horaTexto + '\n' +
+    (servicio ? 'Servicio: ' + servicio + '\n' : '') +
+    'Direccion: ' + (CFG.direccion || '') + '\n' +
+    (notas ? 'Notas: ' + notas + '\n' : '') + '\nSi necesitas reagendar escribe aqui.';
+
+  var waC = tel ? 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(msgConfirmar) : '';
+  var waR = tel ? 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(msgRecordar)  : '';
+
+  var h = '<div class="sec-title">datos de la cita</div>' +
+  '<div class="cita-card">' +
+    '<div class="cita-nombre">' + (s.titulo || '—') + '</div>' +
+    (tel     ? '<div class="cita-row"><span>Telefono</span>' + s.telefono + '</div>' : '') +
+    (email   ? '<div class="cita-row"><span>Email</span>'   + email    + '</div>' : '') +
+    (servicio? '<div class="cita-row"><span>Servicio</span>'+ servicio + '</div>' : '') +
+    (notas   ? '<div class="cita-row"><span>Notas</span>'   + notas    + '</div>' : '') +
+  '</div>' +
+  '<div class="sec-title">acciones</div>' +
+  '<div class="wa-grid">' +
+    (waC ? '<a class="btn-wa btn-wa-confirmar" href="' + waC + '" target="_blank">WA — Confirmacion al cliente</a>' : '') +
+    (waR ? '<a class="btn-wa btn-wa-recordar"  href="' + waR + '" target="_blank">WA — Recordatorio de cita</a>'   : '') +
+  '</div>' +
+  '<button class="btn-cancelar" onclick="cancelarCita(\'' + s.evento + '\')">Cancelar esta cita</button>';
+  return h;
+}
+
+// ── BLOQUEADO ──
+function renderBloqueado(s) {
+  return '<div class="sec-title">slot bloqueado</div>' +
+  '<div class="cita-card" style="border-color:var(--grb)">' +
+    '<div class="cita-nombre" style="color:var(--grt)">' + (s.titulo || 'No disponible') + '</div>' +
+  '</div>' +
+  '<button class="btn-cancelar" style="border-color:var(--grb);color:var(--grt);margin-top:0" onclick="liberarSlot(\'' + s.evento + '\')">Desbloquear este horario</button>';
+}
+
+// ── FORMULARIO NUEVO ──
+function renderFormNuevo(s) {
+  var chips = CFG.servicios.map(function(sv){
+    return '<button type="button" class="chip" onclick="toggleChip(this,\'' + sv.replace(/'/g,"\\'") + '\')">' + sv + '</button>';
+  }).join('');
+  return '<div class="sec-title">nueva cita</div>' +
+  '<div class="form-row">' +
+    '<div class="form-group"><label>Nombre *</label><input type="text" id="f-nombre" placeholder="Nombre completo" autocomplete="off" autocorrect="off"/></div>' +
+    '<div class="form-group"><label>Telefono *</label><input type="tel" id="f-tel" placeholder="10 digitos" maxlength="15"/></div>' +
+  '</div>' +
+  '<div class="form-group"><label>Email (opcional)</label><input type="email" id="f-email" placeholder="correo@ejemplo.com"/></div>' +
+  '<div class="form-group"><label>Servicio</label><div class="servicios-grid">' + chips + '</div></div>' +
+  '<div class="form-group"><label>Notas</label><textarea id="f-notas" placeholder="Referencias, preferencias, alergias..."></textarea></div>' +
+  '<button class="btn-primary" id="btn-guardar" onclick="guardarCita()">Registrar cita</button>' +
+  '<div class="bloqueo-sep">' +
+    '<div class="sec-title">bloquear horario</div>' +
+    '<div class="form-group"><label>Motivo</label><input type="text" id="f-motivo" placeholder="Comida, permiso, mantenimiento..."/></div>' +
+    '<button class="btn-secondary" onclick="bloquearSlot()">Bloquear este horario</button>' +
+  '</div>';
+}
+
+// ── TOGGLE CHIPS ──
+function toggleChip(el, sv) {
+  document.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('sel'); });
+  if (servicioSel === sv) { servicioSel = ''; return; }
+  el.classList.add('sel');
+  servicioSel = sv;
+}
+
+// ── GUARDAR CITA ──
+function guardarCita() {
+  var nombre = (document.getElementById('f-nombre') || {}).value || '';
+  var tel    = (document.getElementById('f-tel')    || {}).value || '';
+  var email  = (document.getElementById('f-email')  || {}).value || '';
+  var notas  = (document.getElementById('f-notas')  || {}).value || '';
+  nombre = nombre.trim(); tel = tel.trim(); email = email.trim(); notas = notas.trim();
+
+  if (!nombre || !tel) { toast('Nombre y telefono son obligatorios', 'err'); return; }
+  if (tel.replace(/\D/g,'').length < 10) { toast('Telefono invalido (min 10 digitos)', 'err'); return; }
+
+  var btn = document.getElementById('btn-guardar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Registrando...'; }
+
+  api({
+    accion:   'crear_cita',
+    inicio:   slotActivo.inicio,
+    fin:      slotActivo.fin,
+    nombre:   nombre,
+    telefono: tel,
+    email:    email,
+    servicio: servicioSel,
+    notas:    notas,
+  }, function(err, res) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Registrar cita'; }
+    if (err || !res) { toast('Error de conexion', 'err'); return; }
+    if (!res.ok) { toast('Error: ' + (res.error || 'desconocido'), 'err'); return; }
+
+    toast('Cita registrada en Calendar', 'ok');
+
+    var telC = (res.telCliente || '').replace(/\D/g,'');
+    var telN = res.telNegocio || '';
+    var urlC = telC ? 'https://wa.me/52' + telC + '?text=' + encodeURIComponent(res.msgCliente || '') : '';
+    var urlN = telN ? 'https://wa.me/' + telN + '?text=' + encodeURIComponent(res.msgNegocio || '') : '';
+    var urlR = telC ? 'https://wa.me/52' + telC + '?text=' + encodeURIComponent(res.msgRecordatorio || '') : '';
+    var c    = res.cita || {};
+
+    document.getElementById('detalle-inner').innerHTML =
+      '<div class="sec-title">cita confirmada</div>' +
+      '<div class="confirm-card">' +
+        '<div class="confirm-titulo">Registrada en Google Calendar</div>' +
+        '<div class="confirm-row"><span>Cliente</span>' + (c.nombre||nombre) + '</div>' +
+        '<div class="confirm-row"><span>Telefono</span>' + (c.telefono||tel) + '</div>' +
+        (c.email    ? '<div class="confirm-row"><span>Email</span>' + c.email + (res.emailEnviado ? ' (enviado)' : '') + '</div>' : '') +
+        (c.servicio ? '<div class="confirm-row"><span>Servicio</span>' + c.servicio + '</div>' : '') +
+        (c.notas    ? '<div class="confirm-row"><span>Notas</span>' + c.notas + '</div>' : '') +
+        '<div class="confirm-row"><span>Fecha</span>' + (c.fechaTexto||'') + ' ' + (c.horaTexto||'') + '</div>' +
+      '</div>' +
+      '<div class="sec-title">enviar whatsapp</div>' +
+      '<p style="font-size:12px;color:var(--t3);margin-bottom:12px">Toca cada boton — abre WhatsApp con el mensaje listo.</p>' +
+      '<div class="wa-grid">' +
+        (urlC ? '<a class="btn-wa btn-wa-confirmar" href="' + urlC + '" target="_blank">WA — Confirmacion al cliente</a>' : '') +
+        (urlN ? '<a class="btn-wa btn-wa-yo"        href="' + urlN + '" target="_blank">WA — Notificarme a mi</a>'       : '') +
+        (urlR ? '<a class="btn-wa btn-wa-recordar"  href="' + urlR + '" target="_blank">WA — Recordatorio (para mas tarde)</a>' : '') +
+      '</div>' +
+      '<button class="btn-secondary" style="margin-top:16px" onclick="volverLista();cargarSlots()">Nueva cita</button>';
+
+    cargarSlots();
+  });
+}
+
+// ── BLOQUEAR ──
+function bloquearSlot() {
+  var motivo = ((document.getElementById('f-motivo') || {}).value || '').trim() || 'No disponible';
+  api({ accion: 'bloquear_slot', inicio: slotActivo.inicio, fin: slotActivo.fin, motivo: motivo }, function(err, res) {
+    if (err || !res || !res.ok) { toast('Error al bloquear', 'err'); return; }
+    toast('Horario bloqueado', 'ok');
+    cargarSlots();
+    volverLista();
+  });
+}
+
+// ── LIBERAR ──
+function liberarSlot(eventoId) {
+  if (!confirm('Desbloquear este horario?')) return;
+  api({ accion: 'cancelar_cita', eventoId: eventoId }, function(err, res) {
+    if (err || !res || !res.ok) { toast('Error', 'err'); return; }
+    toast('Horario liberado', 'ok');
+    cargarSlots(); volverLista();
+  });
+}
+
+// ── CANCELAR CITA ──
+function cancelarCita(eventoId) {
+  if (!confirm('Cancelar esta cita? Se eliminara del calendario.')) return;
+  api({ accion: 'cancelar_cita', eventoId: eventoId }, function(err, res) {
+    if (err || !res || !res.ok) { toast('Error al cancelar', 'err'); return; }
+    toast('Cita cancelada', 'ok');
+    cargarSlots(); volverLista();
+  });
+}
+
+// ── NAVEGACION SEMANA ──
+function cambiarSemana(delta) {
+  offsetSemana += delta;
+  slotActivo = null;
+  document.getElementById('app-body').classList.remove('detalle-activo');
+  cargarSlots();
+}
+
+// ── TOAST ──
+function toast(msg, tipo) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'visible ' + (tipo || 'ok');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className = ''; }, 3000);
+}
+
+// ── PWA SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW:', e); });
+  });
+}
+
+// ── PWA INSTALL BANNER ──
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  var btn = document.getElementById('btn-install');
+  btn.classList.add('visible');
+  btn.onclick = function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      if (r.outcome === 'accepted') btn.classList.remove('visible');
+      deferredPrompt = null;
+    });
+  };
+});
+
+// ── iOS PWA: mostrar hint si no esta instalada ──
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+if (isIOS && !isStandalone) {
+  setTimeout(function(){
+    toast('Para instalar: toca compartir y "Agregar a inicio"', 'ok');
+  }, 2000);
+}
+
+// ── INIT ──
+cargarCFG();
+if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
+  setTimeout(abrirConfig, 500);
+} else {
+  cargarSlots();
+}
+</script>
+</body>
+</html>
