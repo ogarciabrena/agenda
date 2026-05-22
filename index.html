@@ -159,7 +159,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-center{padding:40px;text-align:center;color:var(--t3);font-size:13px}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:flex-end;justify-content:center;padding-bottom:var(--safe-bot)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:flex-end;justify-content:center;padding-bottom:var(--safe-bot)}
 @media(min-width:480px){.modal-overlay{align-items:center}}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--b2);border-radius:var(--rl) var(--rl) 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
@@ -182,7 +182,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">PANEL DE CITAS</div>
-    <div class="login-sub">🔐</div>
+    <div class="login-sub">// acceso restringido</div>
     <div id="login-mode-badge" class="login-mode-badge demo">modo demo</div>
     <div class="login-group">
       <label>Usuario</label>
@@ -194,7 +194,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
     </div>
     <button class="btn-login" id="btn-login" onclick="intentarLogin()">Entrar</button>
     <div class="login-error" id="login-error"></div>
-    <div class="login-cfg-link" onclick="abrirConfigDesdeLogin()">⚙ configurar URL del sistema</div>
+    <div class="login-cfg-link" onclick="abrirConfig()">⚙ URL</div>
   </div>
 </div>
 
@@ -328,7 +328,6 @@ function abrirConfig(){
   document.getElementById('cfg-servicios').value=(CFG.servicios||[]).join('\n');
   document.getElementById('modal-config').classList.add('open');
 }
-function abrirConfigDesdeLogin(){ abrirConfig(); }
 function cerrarConfig(){ document.getElementById('modal-config').classList.remove('open'); }
 
 function guardarConfig(){
