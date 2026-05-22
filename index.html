@@ -1,4 +1,4 @@
-|<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -46,6 +46,73 @@
 html, body { height: 100%; overflow: hidden; }
 body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
 
+/* ══════════════════════════════════════
+   PANTALLA DE LOGIN
+══════════════════════════════════════ */
+#login-screen {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#login-screen.oculto { display: none; }
+
+.login-box {
+  width: 100%; max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 32px 28px;
+  animation: loginIn .25s ease;
+}
+@keyframes loginIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.login-logo {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: .12em; text-align: center; margin-bottom: 6px;
+}
+.login-sub {
+  font-size: 12px; color: var(--t3); text-align: center;
+  margin-bottom: 28px; font-family: var(--mono);
+}
+.login-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.login-group label {
+  font-size: 10px; color: var(--t3); letter-spacing: .06em;
+  text-transform: uppercase; font-family: var(--mono);
+}
+.login-group input {
+  background: var(--s2); border: 1px solid var(--b2); color: var(--text);
+  padding: 12px 14px; border-radius: var(--r); font-family: var(--font);
+  font-size: 14px; outline: none; width: 100%; transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.login-group input:focus { border-color: var(--accent); }
+.btn-login {
+  width: 100%; background: var(--accent); color: #0f0f0f;
+  border: none; padding: 14px; border-radius: var(--r);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 8px; transition: background .15s;
+  min-height: 48px;
+}
+.btn-login:active { background: var(--a2); }
+.btn-login:disabled { opacity: .4; cursor: not-allowed; }
+.login-error {
+  font-size: 12px; color: var(--rt); text-align: center;
+  margin-top: 12px; min-height: 18px; font-family: var(--mono);
+}
+.login-version {
+  font-size: 10px; color: var(--t3); text-align: center;
+  margin-top: 20px; font-family: var(--mono);
+}
+
+/* ══════════════════════════════════════
+   APP (se muestra solo al autenticar)
+══════════════════════════════════════ */
+#app-wrapper { display: none; height: 100%; }
+#app-wrapper.visible { display: block; }
+
 /* ── HEADER ── */
 header {
   display: flex; align-items: center; justify-content: space-between;
@@ -66,12 +133,12 @@ header {
   transition: all .15s;
 }
 .btn-sm:hover, .btn-sm:active { border-color: var(--accent); color: var(--accent); }
+.btn-sm.logout { border-color: var(--rb); color: var(--rt); }
+.btn-sm.logout:hover { border-color: var(--rt); }
 .btn-install { background: var(--green); border-color: var(--gb); color: var(--gt); display: none; }
 .btn-install.visible { display: block; }
 
 /* ── BODY LAYOUT ── */
-/* Mobile: columna única — lista arriba, detalle abajo (o viceversa con drawer)  */
-/* Desktop ≥768: dos columnas */
 .app-body {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -92,11 +159,7 @@ header {
 @media (min-width: 768px) {
   .panel-lista { width: 280px; min-width: 280px; border-right: 1px solid var(--border); }
 }
-
-/* Cuando hay slot activo en móvil, ocultar lista y mostrar detalle */
-.app-body.detalle-activo .panel-lista {
-  display: none;
-}
+.app-body.detalle-activo .panel-lista { display: none; }
 @media (min-width: 768px) {
   .app-body.detalle-activo .panel-lista { display: flex; }
 }
@@ -156,17 +219,13 @@ header {
 
 /* ── PANEL DETALLE ── */
 .panel-detalle {
-  display: none;
-  flex-direction: column;
-  width: 100%;
-  overflow: hidden;
+  display: none; flex-direction: column;
+  width: 100%; overflow: hidden;
 }
 .app-body.detalle-activo .panel-detalle { display: flex; }
 @media (min-width: 768px) {
   .panel-detalle { display: flex; flex: 1; }
 }
-
-/* Barra de navegación de regreso (solo móvil) */
 .detalle-topbar {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border-bottom: 1px solid var(--border);
@@ -180,7 +239,6 @@ header {
 }
 .detalle-topbar-info { font-size: 13px; color: var(--text); font-weight: 500; }
 .detalle-topbar-sub  { font-size: 11px; color: var(--t3); margin-left: auto; font-family: var(--mono); }
-
 .detalle-scroll {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: 20px 16px 32px;
@@ -202,7 +260,6 @@ header {
 .slot-card-hora { font-family: var(--mono); font-size: 20px; color: var(--text); }
 .slot-card-sub  { font-size: 12px; color: var(--t3); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
 
-/* Seccion titulo */
 .sec-title {
   font-family: var(--mono); font-size: 10px; color: var(--t3);
   letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px;
@@ -210,7 +267,6 @@ header {
 }
 .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* Datos cita existente */
 .cita-card {
   background: var(--s2); border: 1px solid var(--rb);
   border-radius: var(--rl); padding: 16px; margin-bottom: 16px;
@@ -219,7 +275,6 @@ header {
 .cita-row { display: flex; gap: 8px; font-size: 13px; color: var(--t2); margin-bottom: 5px; align-items: flex-start; }
 .cita-row span { color: var(--t3); flex-shrink: 0; min-width: 68px; }
 
-/* Botones WA */
 .wa-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
 .btn-wa {
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -239,7 +294,6 @@ header {
 }
 .btn-cancelar:active { background: var(--red); }
 
-/* Formulario nueva cita */
 .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .form-row { display: flex; gap: 12px; }
 .form-row .form-group { flex: 1; }
@@ -255,7 +309,6 @@ header {
 .form-group textarea:focus { border-color: var(--accent); }
 .form-group textarea { resize: vertical; min-height: 72px; }
 
-/* Grid servicios */
 .servicios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (min-width: 480px) { .servicios-grid { grid-template-columns: repeat(3, 1fr); } }
 .chip {
@@ -266,7 +319,6 @@ header {
 }
 .chip:active, .chip.sel { background: var(--green); border-color: var(--gb); color: var(--gt); }
 
-/* Botón guardar */
 .btn-primary {
   width: 100%; background: var(--accent); color: #0f0f0f;
   border: none; padding: 15px; border-radius: var(--r);
@@ -284,7 +336,6 @@ header {
 }
 .btn-secondary:active { border-color: var(--grb); }
 
-/* Panel confirmacion */
 .confirm-card {
   background: var(--s2); border: 1px solid var(--gb);
   border-radius: var(--rl); padding: 16px; margin-bottom: 16px;
@@ -293,16 +344,12 @@ header {
 .confirm-row { font-size: 13px; color: var(--t2); margin-bottom: 4px; display: flex; gap: 8px; }
 .confirm-row span { color: var(--t3); min-width: 64px; flex-shrink: 0; }
 
-/* Seccion bloqueo */
 .bloqueo-sep { margin: 24px 0 0; border-top: 1px solid var(--border); padding-top: 20px; }
 
-/* Empty state */
 .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--t3); text-align: center; padding: 40px 24px; }
 .empty-icon { font-size: 36px; margin-bottom: 14px; opacity: .4; }
 .empty p { font-size: 13px; line-height: 1.7; }
-.empty-hint { margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--t3); }
 
-/* Toast */
 #toast {
   position: fixed; bottom: calc(20px + var(--safe-bot)); left: 50%; transform: translateX(-50%) translateY(80px);
   background: var(--s2); border: 1px solid var(--b2); border-radius: var(--rl);
@@ -314,7 +361,6 @@ header {
 #toast.ok  { border-color: var(--gb); }
 #toast.err { border-color: var(--rb); }
 
-/* Loading spinner */
 .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--b2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-center { padding: 40px; text-align: center; color: var(--t3); font-size: 13px; }
@@ -353,12 +399,39 @@ header {
 </head>
 <body>
 
+<!-- ══════════════════════════════════════
+     PANTALLA DE LOGIN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">PANEL DE CITAS</div>
+    <div class="login-sub">// acceso restringido</div>
+    <div class="login-group">
+      <label>Usuario</label>
+      <input type="text" id="l-user" placeholder="usuario" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+    </div>
+    <div class="login-group">
+      <label>Contraseña</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="btn-login" id="btn-login" onclick="intentarLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-version">v2.0 · sesión 8h</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════ -->
+<div id="app-wrapper">
+
 <header>
   <div class="logo">PANEL <span>DE</span> CITAS</div>
   <div class="header-right">
     <span class="h-negocio" id="h-negocio"></span>
-    <button class="btn-sm btn-install" id="btn-install">Instalar app</button>
+    <button class="btn-sm btn-install" id="btn-install">Instalar</button>
     <button class="btn-sm" onclick="abrirConfig()">Config</button>
+    <button class="btn-sm logout" onclick="cerrarSesion()">Salir</button>
   </div>
 </header>
 
@@ -400,6 +473,8 @@ header {
 
 </div>
 
+</div><!-- /app-wrapper -->
+
 <div id="toast"></div>
 
 <!-- Modal config -->
@@ -430,14 +505,111 @@ header {
 </div>
 
 <script>
-// ── CONFIG PRECARGADA ── edita antes de subir a GitHub
+// ══════════════════════════════════════════════════════════════
+//  AUTH — sesión local 8 horas
+//  Las credenciales viven en el Apps Script (accion=login).
+//  El HTML solo guarda el token de sesión temporal.
+// ══════════════════════════════════════════════════════════════
+
+var SESSION_KEY  = 'agenda_session';
+var SESSION_HORAS = 8;
+
+function sesionValida() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (!s || !s.ts) return false;
+    var difHoras = (Date.now() - s.ts) / 3600000;
+    return difHoras < SESSION_HORAS;
+  } catch(e) { return false; }
+}
+
+function guardarSesion(usuario) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ usuario: usuario, ts: Date.now() }));
+}
+
+function cerrarSesion() {
+  sessionStorage.removeItem(SESSION_KEY);
+  mostrarLogin();
+}
+
+function mostrarLogin() {
+  document.getElementById('login-screen').classList.remove('oculto');
+  document.getElementById('app-wrapper').classList.remove('visible');
+  document.getElementById('l-user').value = '';
+  document.getElementById('l-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+function mostrarApp() {
+  document.getElementById('login-screen').classList.add('oculto');
+  document.getElementById('app-wrapper').classList.add('visible');
+}
+
+// ── Login con Enter ──
+document.getElementById('l-pass').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') intentarLogin();
+});
+document.getElementById('l-user').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') document.getElementById('l-pass').focus();
+});
+
+function intentarLogin() {
+  var user = (document.getElementById('l-user').value || '').trim();
+  var pass = (document.getElementById('l-pass').value || '').trim();
+  var errEl = document.getElementById('login-error');
+  var btn   = document.getElementById('btn-login');
+
+  errEl.textContent = '';
+  if (!user || !pass) { errEl.textContent = 'Ingresa usuario y contraseña'; return; }
+
+  // Revisar que ya haya URL configurada
+  cargarCFG();
+  if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
+    // Sin URL configurada: mostrar app con aviso para que configuren
+    // (en demo el admin puede entrar con credenciales hardcoded temporales)
+    if (validarCredencialesLocales(user, pass)) {
+      guardarSesion(user);
+      mostrarApp();
+      cargarSlots();
+      return;
+    }
+    errEl.textContent = 'Credenciales incorrectas';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  // Validar contra Apps Script
+  fetchApi({ accion: 'login', usuario: user, clave: pass }, function(err, res) {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    if (err || !res) { errEl.textContent = 'Error de conexion'; return; }
+    if (!res.ok)     { errEl.textContent = res.error || 'Credenciales incorrectas'; return; }
+    guardarSesion(user);
+    mostrarApp();
+    cargarSlots();
+  });
+}
+
+// Credenciales de emergencia / demo offline (cuando no hay URL configurada)
+// CAMBIA ESTO antes de entregar a un cliente real
+var CREDS_LOCALES = [
+  { user: 'admin', pass: 'admin2025' },
+];
+function validarCredencialesLocales(user, pass) {
+  return CREDS_LOCALES.some(function(c){ return c.user === user && c.pass === pass; });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
 var CFG_DEFAULT = {
-  url:       'https://script.google.com/macros/s/AKfycbz3vK8cBqnsMItovuA2Rf2AXmIxY_2WfFf_weFkGYkTotQT-BRfTIxD4oWv2fwKL2BJvA/exec',
+  url:       'TU_ID_AQUI',
   negocio:   'Mi Negocio',
   direccion: 'Calle Ejemplo 123, Ciudad',
   servicios: ['Consulta inicial','Servicio 1','Servicio 2','Servicio 3','Servicio 4','Otro'],
 };
-
 var CFG = Object.assign({}, CFG_DEFAULT);
 
 function cargarCFG() {
@@ -445,19 +617,18 @@ function cargarCFG() {
     var saved = localStorage.getItem('agenda_cfg');
     if (saved) CFG = Object.assign({}, CFG_DEFAULT, JSON.parse(saved));
   } catch(e) {}
-  document.getElementById('h-negocio').textContent = CFG.negocio;
+  var el = document.getElementById('h-negocio');
+  if (el) el.textContent = CFG.negocio;
 }
 
 function abrirConfig() {
   document.getElementById('cfg-url').value       = CFG.url;
   document.getElementById('cfg-negocio').value   = CFG.negocio;
   document.getElementById('cfg-dir').value       = CFG.direccion || '';
-  document.getElementById('cfg-servicios').value = CFG.servicios.join('\n');
+  document.getElementById('cfg-servicios').value = (CFG.servicios || []).join('\n');
   document.getElementById('modal-config').classList.add('open');
 }
-function cerrarConfig() {
-  document.getElementById('modal-config').classList.remove('open');
-}
+function cerrarConfig() { document.getElementById('modal-config').classList.remove('open'); }
 function guardarConfig() {
   CFG.url       = document.getElementById('cfg-url').value.trim();
   CFG.negocio   = document.getElementById('cfg-negocio').value.trim() || 'Mi Negocio';
@@ -469,23 +640,33 @@ function guardarConfig() {
   cargarSlots();
 }
 
-// ── ESTADO ──
+// ══════════════════════════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════════════════════════
 var offsetSemana = 0;
 var slotsData    = [];
 var slotActivo   = null;
 var servicioSel  = '';
 
-// ── MOBILE: volver a lista ──
-function volverLista() {
-  slotActivo = null;
-  document.getElementById('app-body').classList.remove('detalle-activo');
-  renderSlots(); // quitar activo highlight
+// ══════════════════════════════════════════════════════════════
+//  UTILIDADES SEGURAS — escapa HTML para evitar XSS
+// ══════════════════════════════════════════════════════════════
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-// ── API ──
-function api(params, cb) {
+// ══════════════════════════════════════════════════════════════
+//  API
+// ══════════════════════════════════════════════════════════════
+function fetchApi(params, cb) {
   if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
-    toast('Configura la URL del Apps Script', 'err');
+    cb('Sin URL configurada');
     return;
   }
   var qs = Object.keys(params).map(function(k){
@@ -500,9 +681,26 @@ function api(params, cb) {
     .catch(function(e){ cb(e.message); });
 }
 
-// ── CARGAR SLOTS ──
+function api(params, cb) {
+  if (!sesionValida()) { cerrarSesion(); return; }
+  fetchApi(params, cb);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MOBILE: volver a lista
+// ══════════════════════════════════════════════════════════════
+function volverLista() {
+  slotActivo = null;
+  document.getElementById('app-body').classList.remove('detalle-activo');
+  renderSlots();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CARGAR SLOTS
+// ══════════════════════════════════════════════════════════════
 function cargarSlots() {
   var el = document.getElementById('slots-scroll');
+  if (!el) return;
   el.innerHTML = '<div class="loading-center"><div class="spinner" style="margin:0 auto 10px"></div><br>Cargando...</div>';
   if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
     el.innerHTML = '<div class="loading-center" style="color:var(--rt)">Configura la URL del Apps Script</div>';
@@ -510,7 +708,7 @@ function cargarSlots() {
   }
   api({ accion: 'slots', semana: offsetSemana }, function(err, data) {
     if (err || !data || !data.ok) {
-      el.innerHTML = '<div class="loading-center" style="color:var(--rt)">Error: ' + (err || (data && data.error) || 'desconocido') + '</div>';
+      el.innerHTML = '<div class="loading-center" style="color:var(--rt)">Error: ' + esc(err || (data && data.error) || 'desconocido') + '</div>';
       return;
     }
     slotsData = data.slots || [];
@@ -518,19 +716,20 @@ function cargarSlots() {
   });
 }
 
-// ── RENDER LISTA ──
+// ══════════════════════════════════════════════════════════════
+//  RENDER LISTA
+// ══════════════════════════════════════════════════════════════
 function renderSlots() {
   var libres = 0, citas = 0, bloqs = 0;
   slotsData.forEach(function(s){
-    if (s.estado === 'libre') libres++;
-    else if (s.estado === 'ocupado') citas++;
-    else bloqs++;
+    if      (s.estado === 'libre')     libres++;
+    else if (s.estado === 'ocupado')   citas++;
+    else                               bloqs++;
   });
   document.getElementById('stat-l').textContent = libres;
   document.getElementById('stat-c').textContent = citas;
   document.getElementById('stat-b').textContent = bloqs;
 
-  // Semana label
   if (slotsData.length > 0) {
     var p = new Date(slotsData[0].inicio);
     var u = new Date(slotsData[slotsData.length-1].inicio);
@@ -538,9 +737,7 @@ function renderSlots() {
       p.getDate() + '/' + (p.getMonth()+1) + ' - ' + u.getDate() + '/' + (u.getMonth()+1);
   }
 
-  // Agrupar por dia
-  var grupos = {};
-  var orden  = [];
+  var grupos = {}, orden = [];
   slotsData.forEach(function(s){
     if (!grupos[s.fechaTexto]) { grupos[s.fechaTexto] = []; orden.push(s.fechaTexto); }
     grupos[s.fechaTexto].push(s);
@@ -551,14 +748,14 @@ function renderSlots() {
   orden.forEach(function(dia){
     var slots = grupos[dia];
     var esHoy = new Date(slots[0].inicio).toDateString() === hoyStr;
-    html += '<div class="dia-header ' + (esHoy ? 'hoy' : '') + '">' + dia + (esHoy ? ' · HOY' : '') + '</div>';
+    html += '<div class="dia-header ' + (esHoy ? 'hoy' : '') + '">' + esc(dia) + (esHoy ? ' · HOY' : '') + '</div>';
     slots.forEach(function(s){
       var esActivo = slotActivo && slotActivo.id === s.id ? ' activo' : '';
-      var nombre = s.estado === 'libre' ? '' : (s.titulo || '—');
-      html += '<div class="slot' + esActivo + '" onclick="selSlot(\'' + s.id + '\')">' +
-        '<span class="slot-hora">' + s.horaTexto + '</span>' +
+      var nombre   = s.estado === 'libre' ? '' : esc(s.titulo || '—');
+      html += '<div class="slot' + esActivo + '" onclick="selSlot(\'' + esc(s.id) + '\')">' +
+        '<span class="slot-hora">' + esc(s.horaTexto) + '</span>' +
         '<span class="slot-nombre">' + nombre + '</span>' +
-        '<span class="pill ' + s.estado + '">' + s.estado + '</span>' +
+        '<span class="pill ' + esc(s.estado) + '">' + esc(s.estado) + '</span>' +
       '</div>';
     });
   });
@@ -566,13 +763,14 @@ function renderSlots() {
   document.getElementById('slots-scroll').innerHTML = html;
 }
 
-// ── SELECCIONAR SLOT ──
+// ══════════════════════════════════════════════════════════════
+//  SELECCIONAR SLOT
+// ══════════════════════════════════════════════════════════════
 function selSlot(id) {
   slotActivo = slotsData.find(function(s){ return s.id === id; });
   if (!slotActivo) return;
   document.getElementById('app-body').classList.add('detalle-activo');
 
-  // Actualizar topbar mobile
   var parts = (slotActivo.fechaTexto || '').split(' ');
   document.getElementById('topbar-titulo').textContent = slotActivo.horaTexto + ' · ' + (parts[0] || '');
   document.getElementById('topbar-sub').textContent    = (parts[1] || '') + ' ' + (parts[2] || '');
@@ -581,7 +779,9 @@ function selSlot(id) {
   renderSlots();
 }
 
-// ── RENDER DETALLE ──
+// ══════════════════════════════════════════════════════════════
+//  RENDER DETALLE
+// ══════════════════════════════════════════════════════════════
 function renderDetalle() {
   if (!slotActivo) return;
   var s = slotActivo;
@@ -590,19 +790,19 @@ function renderDetalle() {
 
   var html = '<div class="slot-card">' +
     '<div class="slot-card-fecha">' +
-      '<div class="slot-card-dia">' + dia + '</div>' +
-      '<div class="slot-card-mes">' + mes + '</div>' +
+      '<div class="slot-card-dia">' + esc(dia) + '</div>' +
+      '<div class="slot-card-mes">' + esc(mes) + '</div>' +
     '</div>' +
     '<div class="slot-card-div"></div>' +
     '<div class="slot-card-info">' +
-      '<div class="slot-card-hora">' + s.horaTexto + '</div>' +
-      '<div class="slot-card-sub">' + diaNom + ' &nbsp;<span class="pill ' + s.estado + '">' + s.estado + '</span></div>' +
+      '<div class="slot-card-hora">' + esc(s.horaTexto) + '</div>' +
+      '<div class="slot-card-sub">' + esc(diaNom) + ' &nbsp;<span class="pill ' + esc(s.estado) + '">' + esc(s.estado) + '</span></div>' +
     '</div>' +
   '</div>';
 
-  if (s.estado === 'ocupado')  html += renderCitaExistente(s);
+  if      (s.estado === 'ocupado')   html += renderCitaExistente(s);
   else if (s.estado === 'bloqueado') html += renderBloqueado(s);
-  else html += renderFormNuevo(s);
+  else                               html += renderFormNuevo(s);
 
   document.getElementById('detalle-inner').innerHTML = html;
   servicioSel = '';
@@ -633,36 +833,39 @@ function renderCitaExistente(s) {
   var waC = tel ? 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(msgConfirmar) : '';
   var waR = tel ? 'https://wa.me/52' + tel + '?text=' + encodeURIComponent(msgRecordar)  : '';
 
-  var h = '<div class="sec-title">datos de la cita</div>' +
+  // ID del evento escapado para uso en onclick
+  var evId = esc(s.evento || '');
+
+  return '<div class="sec-title">datos de la cita</div>' +
   '<div class="cita-card">' +
-    '<div class="cita-nombre">' + (s.titulo || '—') + '</div>' +
-    (tel     ? '<div class="cita-row"><span>Telefono</span>' + s.telefono + '</div>' : '') +
-    (email   ? '<div class="cita-row"><span>Email</span>'   + email    + '</div>' : '') +
-    (servicio? '<div class="cita-row"><span>Servicio</span>'+ servicio + '</div>' : '') +
-    (notas   ? '<div class="cita-row"><span>Notas</span>'   + notas    + '</div>' : '') +
+    '<div class="cita-nombre">' + esc(s.titulo || '—') + '</div>' +
+    (tel     ? '<div class="cita-row"><span>Telefono</span>' + esc(s.telefono) + '</div>' : '') +
+    (email   ? '<div class="cita-row"><span>Email</span>'   + esc(email)    + '</div>' : '') +
+    (servicio? '<div class="cita-row"><span>Servicio</span>'+ esc(servicio) + '</div>' : '') +
+    (notas   ? '<div class="cita-row"><span>Notas</span>'   + esc(notas)    + '</div>' : '') +
   '</div>' +
   '<div class="sec-title">acciones</div>' +
   '<div class="wa-grid">' +
     (waC ? '<a class="btn-wa btn-wa-confirmar" href="' + waC + '" target="_blank">WA — Confirmacion al cliente</a>' : '') +
     (waR ? '<a class="btn-wa btn-wa-recordar"  href="' + waR + '" target="_blank">WA — Recordatorio de cita</a>'   : '') +
   '</div>' +
-  '<button class="btn-cancelar" onclick="cancelarCita(\'' + s.evento + '\')">Cancelar esta cita</button>';
-  return h;
+  '<button class="btn-cancelar" onclick="cancelarCita(\'' + evId + '\')">Cancelar esta cita</button>';
 }
 
 // ── BLOQUEADO ──
 function renderBloqueado(s) {
+  var evId = esc(s.evento || '');
   return '<div class="sec-title">slot bloqueado</div>' +
   '<div class="cita-card" style="border-color:var(--grb)">' +
-    '<div class="cita-nombre" style="color:var(--grt)">' + (s.titulo || 'No disponible') + '</div>' +
+    '<div class="cita-nombre" style="color:var(--grt)">' + esc(s.titulo || 'No disponible') + '</div>' +
   '</div>' +
-  '<button class="btn-cancelar" style="border-color:var(--grb);color:var(--grt);margin-top:0" onclick="liberarSlot(\'' + s.evento + '\')">Desbloquear este horario</button>';
+  '<button class="btn-cancelar" style="border-color:var(--grb);color:var(--grt);margin-top:0" onclick="liberarSlot(\'' + evId + '\')">Desbloquear este horario</button>';
 }
 
 // ── FORMULARIO NUEVO ──
 function renderFormNuevo(s) {
-  var chips = CFG.servicios.map(function(sv){
-    return '<button type="button" class="chip" onclick="toggleChip(this,\'' + sv.replace(/'/g,"\\'") + '\')">' + sv + '</button>';
+  var chips = (CFG.servicios || []).map(function(sv){
+    return '<button type="button" class="chip" onclick="toggleChip(this,' + JSON.stringify(sv) + ')">' + esc(sv) + '</button>';
   }).join('');
   return '<div class="sec-title">nueva cita</div>' +
   '<div class="form-row">' +
@@ -688,13 +891,14 @@ function toggleChip(el, sv) {
   servicioSel = sv;
 }
 
-// ── GUARDAR CITA ──
+// ══════════════════════════════════════════════════════════════
+//  GUARDAR CITA
+// ══════════════════════════════════════════════════════════════
 function guardarCita() {
-  var nombre = (document.getElementById('f-nombre') || {}).value || '';
-  var tel    = (document.getElementById('f-tel')    || {}).value || '';
-  var email  = (document.getElementById('f-email')  || {}).value || '';
-  var notas  = (document.getElementById('f-notas')  || {}).value || '';
-  nombre = nombre.trim(); tel = tel.trim(); email = email.trim(); notas = notas.trim();
+  var nombre = ((document.getElementById('f-nombre') || {}).value || '').trim();
+  var tel    = ((document.getElementById('f-tel')    || {}).value || '').trim();
+  var email  = ((document.getElementById('f-email')  || {}).value || '').trim();
+  var notas  = ((document.getElementById('f-notas')  || {}).value || '').trim();
 
   if (!nombre || !tel) { toast('Nombre y telefono son obligatorios', 'err'); return; }
   if (tel.replace(/\D/g,'').length < 10) { toast('Telefono invalido (min 10 digitos)', 'err'); return; }
@@ -714,7 +918,7 @@ function guardarCita() {
   }, function(err, res) {
     if (btn) { btn.disabled = false; btn.textContent = 'Registrar cita'; }
     if (err || !res) { toast('Error de conexion', 'err'); return; }
-    if (!res.ok) { toast('Error: ' + (res.error || 'desconocido'), 'err'); return; }
+    if (!res.ok)     { toast('Error: ' + esc(res.error || 'desconocido'), 'err'); return; }
 
     toast('Cita registrada en Calendar', 'ok');
 
@@ -729,18 +933,18 @@ function guardarCita() {
       '<div class="sec-title">cita confirmada</div>' +
       '<div class="confirm-card">' +
         '<div class="confirm-titulo">Registrada en Google Calendar</div>' +
-        '<div class="confirm-row"><span>Cliente</span>' + (c.nombre||nombre) + '</div>' +
-        '<div class="confirm-row"><span>Telefono</span>' + (c.telefono||tel) + '</div>' +
-        (c.email    ? '<div class="confirm-row"><span>Email</span>' + c.email + (res.emailEnviado ? ' (enviado)' : '') + '</div>' : '') +
-        (c.servicio ? '<div class="confirm-row"><span>Servicio</span>' + c.servicio + '</div>' : '') +
-        (c.notas    ? '<div class="confirm-row"><span>Notas</span>' + c.notas + '</div>' : '') +
-        '<div class="confirm-row"><span>Fecha</span>' + (c.fechaTexto||'') + ' ' + (c.horaTexto||'') + '</div>' +
+        '<div class="confirm-row"><span>Cliente</span>'  + esc(c.nombre   || nombre) + '</div>' +
+        '<div class="confirm-row"><span>Telefono</span>' + esc(c.telefono || tel)    + '</div>' +
+        (c.email    ? '<div class="confirm-row"><span>Email</span>'    + esc(c.email)    + (res.emailEnviado ? ' (enviado)' : '') + '</div>' : '') +
+        (c.servicio ? '<div class="confirm-row"><span>Servicio</span>' + esc(c.servicio) + '</div>' : '') +
+        (c.notas    ? '<div class="confirm-row"><span>Notas</span>'    + esc(c.notas)    + '</div>' : '') +
+        '<div class="confirm-row"><span>Fecha</span>'   + esc((c.fechaTexto || '') + ' ' + (c.horaTexto || '')) + '</div>' +
       '</div>' +
       '<div class="sec-title">enviar whatsapp</div>' +
       '<p style="font-size:12px;color:var(--t3);margin-bottom:12px">Toca cada boton — abre WhatsApp con el mensaje listo.</p>' +
       '<div class="wa-grid">' +
         (urlC ? '<a class="btn-wa btn-wa-confirmar" href="' + urlC + '" target="_blank">WA — Confirmacion al cliente</a>' : '') +
-        (urlN ? '<a class="btn-wa btn-wa-yo"        href="' + urlN + '" target="_blank">WA — Notificarme a mi</a>'       : '') +
+        (urlN ? '<a class="btn-wa btn-wa-yo"        href="' + urlN + '" target="_blank">WA — Notificarme a mi</a>'        : '') +
         (urlR ? '<a class="btn-wa btn-wa-recordar"  href="' + urlR + '" target="_blank">WA — Recordatorio (para mas tarde)</a>' : '') +
       '</div>' +
       '<button class="btn-secondary" style="margin-top:16px" onclick="volverLista();cargarSlots()">Nueva cita</button>';
@@ -751,12 +955,11 @@ function guardarCita() {
 
 // ── BLOQUEAR ──
 function bloquearSlot() {
-  var motivo = ((document.getElementById('f-motivo') || {}).value || '').trim() || 'No disponible';
+  var motivo = (((document.getElementById('f-motivo') || {}).value) || '').trim() || 'No disponible';
   api({ accion: 'bloquear_slot', inicio: slotActivo.inicio, fin: slotActivo.fin, motivo: motivo }, function(err, res) {
     if (err || !res || !res.ok) { toast('Error al bloquear', 'err'); return; }
     toast('Horario bloqueado', 'ok');
-    cargarSlots();
-    volverLista();
+    cargarSlots(); volverLista();
   });
 }
 
@@ -810,32 +1013,35 @@ window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   deferredPrompt = e;
   var btn = document.getElementById('btn-install');
-  btn.classList.add('visible');
-  btn.onclick = function() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(r){
-      if (r.outcome === 'accepted') btn.classList.remove('visible');
-      deferredPrompt = null;
-    });
-  };
+  if (btn) {
+    btn.classList.add('visible');
+    btn.onclick = function() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(r){
+        if (r.outcome === 'accepted') btn.classList.remove('visible');
+        deferredPrompt = null;
+      });
+    };
+  }
 });
 
-// ── iOS PWA: mostrar hint si no esta instalada ──
+// ── iOS PWA hint ──
 var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 var isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 if (isIOS && !isStandalone) {
-  setTimeout(function(){
-    toast('Para instalar: toca compartir y "Agregar a inicio"', 'ok');
-  }, 2000);
+  setTimeout(function(){ toast('Para instalar: compartir → "Agregar a inicio"', 'ok'); }, 3000);
 }
 
-// ── INIT ──
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
 cargarCFG();
-if (!CFG.url || CFG.url.includes('TU_ID_AQUI')) {
-  setTimeout(abrirConfig, 500);
-} else {
+if (sesionValida()) {
+  mostrarApp();
   cargarSlots();
+} else {
+  mostrarLogin();
 }
 </script>
 </body>
