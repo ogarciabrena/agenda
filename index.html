@@ -186,11 +186,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
     <div id="login-mode-badge" class="login-mode-badge demo">modo demo</div>
     <div class="login-group">
       <label>Usuario</label>
-      <input type="text" id="l-user" placeholder="usuario" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="text" id="l-user" placeholder="usuario" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')"/>
     </div>
     <div class="login-group">
       <label>Contraseña</label>
-      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')"/>
     </div>
     <button class="btn-login" id="btn-login" onclick="intentarLogin()">Entrar</button>
     <div class="login-error" id="login-error"></div>
@@ -358,9 +358,12 @@ function sesionValida(){
     return (Date.now()-s.ts)/3600000 < SESSION_HORAS;
   }catch(e){return false;}
 }
-function guardarSesion(usuario){
-  // Guardamos SOLO usuario y timestamp — nunca la contraseña
-  sessionStorage.setItem(SESSION_KEY,JSON.stringify({u:usuario,ts:Date.now()}));
+function guardarSesion(usuario, token) {
+  // Guardamos usuario + token — NUNCA la contraseña
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ u: usuario, token: token, ts: Date.now() }));
+}
+function getToken() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'{}').token || ''; } catch(e){ return ''; }
 }
 function cerrarSesion(){
   sessionStorage.removeItem(SESSION_KEY);
@@ -405,7 +408,7 @@ function intentarLogin(){
     btn.disabled=false; btn.textContent='Entrar';
     if(err||!res){errEl.textContent='Error de conexion';return;}
     if(!res.ok)  {errEl.textContent=esc(res.error||'Credenciales incorrectas');return;}
-    guardarSesion(user);
+    guardarSesion(user, res.token || '');
     mostrarApp();
     cargarSlots();
   });
@@ -425,6 +428,7 @@ function fetchRaw(params,cb){
 
 function api(params,cb){
   if(!sesionValida()){cerrarSesion();return;}
+  params.token = getToken();
   fetchRaw(params,cb);
 }
 
